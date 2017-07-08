@@ -37,16 +37,17 @@ function findInitialShardIterator(err, shardIteratorData, func) {
         console.log(shardIteratorData);
         kinesis.getRecords({
             ShardIterator: shardIteratorData.ShardIterator
-        }, printRecords);
+        }, func);
     }
 }
 
-function fromBeginning(err, streamData) {
+function fromBeginning(err, streamData, func) {
     if (err) console.log(err);
     else {
-        streamData.StreamDescription.Shards.forEach(shard => kinesis.getShardIterator(constructShardParams(shard.ShardId), findInitialShardIterator));
+        streamData.StreamDescription.Shards.forEach(shard =>
+            kinesis.getShardIterator(constructShardParams(shard.ShardId), (err, streamData) => findInitialShardIterator(err,streamData, func)));
     }
 }
 
-kinesis.describeStream(params, fromBeginning);
+kinesis.describeStream(params, (err, streamData) => fromBeginning(err, streamData, printRecords));
 
